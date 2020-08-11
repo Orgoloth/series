@@ -31,8 +31,8 @@ export class ListadoComponent implements OnInit {
 
   traerResultados() {
     do {
-      this.tmdb.searchTv('dark', ++this.contador).subscribe(this.myObserver);
-    } while (this.contador < 10 && this.contador <= this.totalPaginas);
+      this.tmdb.searchTv('batman', ++this.contador).subscribe(this.myObserver);
+    } while (this.contador < 10 && this.contador < this.totalPaginas);
   }
 
   ordenarResultados() {
