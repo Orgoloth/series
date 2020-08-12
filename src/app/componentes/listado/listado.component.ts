@@ -8,31 +8,39 @@ import { TmdbService } from 'src/app/servicios/tmdb.service';
 })
 export class ListadoComponent implements OnInit {
   results: any[] = [];
-  pagina: number = 1;
-  totalPaginas: number = 2;
-  contador: number = 0;
+  pagina: number;
+  totalPaginas: number;
+  contador: number;
 
   myObserver = {
     next: (data) => {
-      console.log(data);
       this.results = [...this.results, ...data['results']];
       this.pagina = data['page'];
       this.totalPaginas = data['total_pages'];
     },
-    error: (err) => console.error('Observer got an error: ' + err),
-    complete: () => this.ordenarResultados(),
+    error: (err: Error) => console.error('Observer got an error: ' + err),
+    complete: () => {
+      this.ordenarResultados();
+    },
   };
 
   constructor(private tmdb: TmdbService) {}
 
-  ngOnInit(): void {
-    this.traerResultados();
+  ngOnInit(): void {}
+
+  buscar(termino: string) {
+    if (termino.length > 3) {
+      this.results = [];
+      this.contador = 0;
+      this.totalPaginas = 100;
+      do {
+        this.tmdb.searchTv(termino, ++this.contador).subscribe(this.myObserver);
+      } while (this.contador < 100 || this.contador > this.totalPaginas);
+    }
   }
 
-  traerResultados() {
-    do {
-      this.tmdb.searchTv('batman', ++this.contador).subscribe(this.myObserver);
-    } while (this.contador < 10 && this.contador < this.totalPaginas);
+  seguimiento(id: number) {
+    console.log(id);
   }
 
   ordenarResultados() {
