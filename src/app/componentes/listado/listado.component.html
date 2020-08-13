@@ -1,26 +1,23 @@
-<form
-  class="form-inline mb-2 row"
-  (submit)="buscar(termino.value); $event.preventDefault()"
->
+<form class="mb-2 w-100" (submit)="buscar(); $event.preventDefault()">
   <input
-    class="form-control col-9"
+    autofocus
+    class="form-control"
     type="search"
     placeholder="Buscar"
     aria-label="Buscar"
-    #termino
+    [formControl]="termino"
   />
-  <button
-    class="btn btn-outline-success col-2 ml-2"
-    style="min-width: 5rem;"
-    type="submit"
-  >
-    Buscar
-  </button>
 </form>
+
+<ul>
+  <li *ngFor="let seguimiento of enSeguimiento | async">
+    {{ seguimiento.idSerie }}
+  </li>
+</ul>
 
 <div class="row">
   <div
-    class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3"
+    class="col-sm-12 col-md-6 col-lg-4 col-xl-3"
     *ngFor="let result of this.results"
   >
     <div class="card">
@@ -33,6 +30,7 @@
       <div class="card-body">
         <h5 class="card-title">
           {{ result.name }} ({{ result.first_air_date | date: "yyyy" }})
+          {{ result.popularity }}
         </h5>
         <p class="card-text">
           {{

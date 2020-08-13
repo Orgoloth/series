@@ -1,5 +1,17 @@
 import { Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import {
+  AngularFirestore,
+  AngularFirestoreCollection,
+} from '@angular/fire/firestore';
+
 import { TmdbService } from 'src/app/servicios/tmdb.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+export interface Item {
+  idSerie: number;
+}
 
 @Component({
   selector: 'app-listado',
@@ -8,42 +20,74 @@ import { TmdbService } from 'src/app/servicios/tmdb.service';
 })
 export class ListadoComponent implements OnInit {
   results: any[] = [];
+  termino: FormControl = new FormControl('');
   pagina: number;
   totalPaginas: number;
   contador: number;
 
-  myObserver = {
-    next: (data) => {
-      this.results = [...this.results, ...data['results']];
-      this.pagina = data['page'];
-      this.totalPaginas = data['total_pages'];
-    },
-    error: (err: Error) => console.error('Observer got an error: ' + err),
-    complete: () => {
-      this.ordenarResultados();
-    },
-  };
+  enSeguimientoColeccion: AngularFirestoreCollection<Item>;
+  enSeguimiento: Observable<Item[]>;
 
-  constructor(private tmdb: TmdbService) {}
+  prueba: Item[] = [];
+
+  constructor(private tmdb: TmdbService, private firestore: AngularFirestore) {
+    // Traemos las series que están en seguimiento
+    this.enSeguimientoColeccion = this.firestore.collection<Item>(
+      'seguimiento'
+    );
+    this.enSeguimiento = this.enSeguimientoColeccion.valueChanges();
+
+    // Suscribimos a los cambios en el termino de búsqueda:
+    this.termino.valueChanges.subscribe((data) => {
+      if (data.length > 3) {
+        this.buscar();
+      }
+    });
+  }
 
   ngOnInit(): void {}
 
-  buscar(termino: string) {
-    if (termino.length > 3) {
+  buscar = (pagina: number = 1) => {
+    console.log('Buscando: ', this.termino.value, pagina);
+    if (pagina === 1) {
+      console.log('Vaciando');
       this.results = [];
-      this.contador = 0;
-      this.totalPaginas = 100;
-      do {
-        this.tmdb.searchTv(termino, ++this.contador).subscribe(this.myObserver);
-      } while (this.contador < 100 || this.contador > this.totalPaginas);
     }
-  }
-
-  seguimiento(id: number) {
-    console.log(id);
-  }
+    this.tmdb.searchTv(this.termino.value, pagina).subscribe({
+      next: (data) => {
+        if (data) {
+          this.results = [...this.results, ...data['results']];
+          this.pagina = data['page'];
+          this.totalPaginas = data['total_pages'];
+        } else {
+          console.log('Sin resultados');
+        }
+      },
+      error: (err: Error) => console.error('Observer got an error: ' + err),
+      complete: () => {
+        if (this.pagina < this.totalPaginas) {
+          this.buscar(this.pagina + 1);
+        }
+        this.ordenarResultados();
+        console.log('Finalizada ronda de datos', this.pagina);
+      },
+    });
+  };
 
   ordenarResultados() {
     this.results.sort((a, b) => (a.popularity > b.popularity ? -1 : 1));
+  }
+
+  seguimiento(idSerie: number) {
+    console.log(idSerie);
+
+    // Comprobamos si en la lista ya está el id:
+    this.enSeguimiento.subscribe((data: Item[]) => {
+      if (data.filter((item) => item.idSerie === idSerie).length == 0) {
+        this.enSeguimientoColeccion.add({ idSerie });
+      } else {
+        console.log(`${idSerie} ya existe`);
+      }
+    });
   }
 }
