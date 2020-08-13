@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "apps-pruebas-a4fb5": {
+      "hosting": {
+        "series": [
+          "apps-pruebas-a4fb5"
+        ]
+      }
+    }
+  }
+}
