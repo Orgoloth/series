@@ -18,8 +18,6 @@ export class TmdbService {
   searchTv(termino: string, pagina: number) {
     this.params = this.params.set('query', termino);
     this.params = this.params.set('page', pagina.toString());
-    // console.log('Buscando: ', termino, pagina.toString(), this.params);
-
-    return this.http.get(`${this.baseUrl}/search/tv`, { params: this.params });
+    return this.http.get(`${this.baseUrl}/search/tv`, { params: this.params }).toPromise();
   }
 }

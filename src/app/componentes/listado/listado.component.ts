@@ -30,6 +30,8 @@ export class ListadoComponent implements OnInit {
 
   prueba: Item[] = [];
 
+  private timer;
+
   constructor(private tmdb: TmdbService, private firestore: AngularFirestore) {
     // Traemos las series que están en seguimiento
     this.enSeguimientoColeccion = this.firestore.collection<Item>(
@@ -39,44 +41,34 @@ export class ListadoComponent implements OnInit {
 
     // Suscribimos a los cambios en el termino de búsqueda:
     this.termino.valueChanges.subscribe((data) => {
-      if (data.length > 3) {
-        this.buscar();
-      }
+      clearTimeout(this.timer);
+      this.timer = setTimeout(this.buscar, 2000);
     });
   }
 
   ngOnInit(): void {}
 
-  buscar = (pagina: number = 1) => {
-    console.log('Buscando: ', this.termino.value, pagina);
+  buscar = async (pagina: number = 1) => {
     if (pagina === 1) {
       console.log('Vaciando');
       this.results = [];
     }
-    this.tmdb.searchTv(this.termino.value, pagina).subscribe({
-      next: (data) => {
-        if (data) {
-          this.results = [...this.results, ...data['results']];
-          this.pagina = data['page'];
-          this.totalPaginas = data['total_pages'];
-        } else {
-          console.log('Sin resultados');
-        }
-      },
-      error: (err: Error) => console.error('Observer got an error: ' + err),
-      complete: () => {
-        if (this.pagina < this.totalPaginas) {
-          this.buscar(this.pagina + 1);
-        }
-        this.ordenarResultados();
-        console.log('Finalizada ronda de datos', this.pagina);
-      },
+    await this.tmdb.searchTv(this.termino.value, pagina).then((data) => {
+      if (data) {
+        this.results = [...this.results, ...data['results']];
+        this.pagina = data['page'];
+        this.totalPaginas = data['total_pages'];
+      } else {
+        console.log('Sin resultados');
+      }
+
+      if (this.pagina < this.totalPaginas) {
+        this.buscar(this.pagina + 1);
+      }
+
+      this.results.sort((a, b) => (a.popularity > b.popularity ? -1 : 1));
     });
   };
-
-  ordenarResultados() {
-    this.results.sort((a, b) => (a.popularity > b.popularity ? -1 : 1));
-  }
 
   seguimiento(idSerie: number) {
     console.log(idSerie);
