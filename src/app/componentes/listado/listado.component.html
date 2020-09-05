@@ -1,4 +1,4 @@
-<form class="mb-2 w-100" (submit)="buscar(); $event.preventDefault()">
+<form class="mb-2 w-100" (submit)="buscarSeries(); $event.preventDefault()">
   <input
     autofocus
     class="form-control"
@@ -9,16 +9,16 @@
   />
 </form>
 
-<ul>
+<!-- <ul>
   <li *ngFor="let seguimiento of enSeguimiento | async">
     {{ seguimiento.idSerie }}
   </li>
-</ul>
+</ul> -->
 
 <div class="row">
   <div
     class="col-sm-12 col-md-6 col-lg-4 col-xl-3"
-    *ngFor="let result of this.results"
+    *ngFor="let result of this.tmdb.getBusqueda() | async"
   >
     <div class="card">
       <img
@@ -29,7 +29,8 @@
       />
       <div class="card-body">
         <h5 class="card-title">
-          {{ result.name }} ({{ result.first_air_date | date: "yyyy" }})
+          {{ result.name }} <br />
+          {{ result.first_air_date | date: "yyyy" }}<br />
           {{ result.popularity }}
         </h5>
         <p class="card-text">
@@ -41,13 +42,17 @@
         </p>
         <button
           class="btn btn-primary btn-block"
-          (click)="seguimiento(result.id)"
+          (click)="cambiarSeguimiento(result.id)"
         >
           <i class="far fa-heart"></i>
-          <!-- <i class="fas fa-heart" *ngIf="result.seguimiento"></i>
-          <i class="far fa-heart" *ngIf="result.seguimiento == 'undefined'"></i> -->
+          <i class="fas fa-heart" *ngIf="result.siguiendo"></i>
+          <i class="far fa-heart" *ngIf="result.siguiendo == 'undefined'"></i>
         </button>
       </div>
     </div>
   </div>
 </div>
+
+<pre>
+  {{ this.tmdb.getBusqueda() | async | json }}
+</pre>
